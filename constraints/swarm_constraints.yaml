@@ -1,0 +1,81 @@
+# Swarm 协作约束
+# 基于 Harness Engineering 原则：定义协作规则，让 Agent Swarm 在约束下高效协作
+# 领域：青少年心理辅助。重点：危机信号触发强制风险评估 Agent 介入
+
+swarm:
+  # 基本限制
+  max_agents_per_task: 3  # 单个任务最多3个Agent参与（避免过度协作）
+  max_parallel_tasks: 5   # 最多5个任务并行（避免资源耗尽）
+  timeout_seconds: 90     # 任务超时时间（当前已在 SwarmCoordinator 中定义）
+
+  # 任务分解规则（LeadAgent 使用）
+  task_decomposition_rules:
+    - name: "simple_query"
+      pattern: "情绪倾诉|普通困扰|学习压力|人际矛盾|如何调节|放松方法|科普"
+      max_subtasks: 1
+      reason: "简单问题无需Swarm，单Agent足够"
+      example: "最近考试压力大怎么办？"
+
+    - name: "coping_advice"
+      pattern: "睡眠|运动|饮食|生活习惯|日常护理|情绪调节|放松训练"
+      max_subtasks: 1
+      reason: "调适建议相对简单"
+      example: "焦虑的时候怎么让自己平静下来？"
+
+    - name: "moderate_case"
+      pattern: "持续低落|失眠两周|厌学|社交回避|两个困扰|简单组合"
+      min_subtasks: 2
+      max_subtasks: 3
+      reason: "中等复杂度，需要2-3个Agent协作"
+      example: "最近总睡不着，也不想上学，是不是有问题？"
+
+    - name: "complex_case"
+      pattern: "多个症状|既往史|自伤念头|家庭变故|多重压力|功能受损"
+      min_subtasks: 2
+      max_subtasks: 5
+      reason: "复杂案例需要多角度深度分析"
+      example: "15岁，持续情绪低落伴食欲下降、自我否定，近期有自伤念头"
+
+  # Agent 选择规则（强制约束）
+  agent_selection_rules:
+    - if_symptoms: ["自伤", "自杀", "轻生", "不想活", "结束生命", "伤害自己", "割腕", "跳楼", "服药自杀", "想死", "活不下去", "受虐", "家暴", "被虐待", "伤害他人", "失踪", "离家出走"]
+      must_include: ["diagnostic_agent"]
+      reason: "危机信号必须风险评估与升级干预"
+      priority: critical
+
+    - if_keywords: ["指南", "循证", "研究", "文献", "量表", "最新进展", "诊断标准", "专家共识"]
+      must_include: ["research_agent"]
+      reason: "需要权威证据和最新信息"
+      priority: high
+
+    - if_keywords: ["情绪", "倾诉", "陪伴", "调节", "建议", "应对", "放松", "睡眠"]
+      must_include: ["consultation_agent"]
+      reason: "需要倾听与调适建议"
+      priority: medium
+
+  # 质量控制
+  quality_control:
+    min_contribution_length: 50  # 每个Agent贡献至少50字（避免敷衍）
+    max_contribution_length: 800  # 每个Agent贡献最多800字（避免冗长）
+    require_evidence: true  # 要求提供证据支持
+    allow_disagreement: true  # 允许Agent之间观点不同（但需说明理由）
+
+  # 冲突解决
+  conflict_resolution:
+    strategy: "lead_agent_decides"  # LeadAgent 最终决策
+    require_explanation: true  # 冲突时需要解释理由
+    escalate_if_safety_concern: true  # 安全问题上报用户
+
+  # 协作模式
+  collaboration_modes:
+    - mode: "parallel"
+      description: "各Agent并行独立工作"
+      use_when: "任务相对独立"
+
+    - mode: "sequential"
+      description: "Agent按顺序工作（当前未实现）"
+      use_when: "任务有依赖关系"
+
+    - mode: "debate"
+      description: "Agent辩论后达成共识（当前未实现）"
+      use_when: "存在多种观点"
