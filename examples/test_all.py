@@ -80,7 +80,7 @@ async def generate_test_report(passed: int, failed: int, total: int, context_awa
 | | - 记忆系统端到端集成 | {'✅' if context_aware else '⚠️'} |
 | **Phase 4** | 精简高质量工具 | ✅ |
 | | - 生活方式建议工具 | ✅ |
-| | - 疾病分类工具（ICD-10） | ✅ |
+| | - 心理筛查量表编码工具（ICD-11） | ✅ |
 | | - 临床指南检索工具 | ✅ |
 | **Phase 5** | DeepResearch 深度研究 | ✅ |
 | | - 证据综合器 | ✅ |
@@ -119,10 +119,10 @@ async def generate_test_report(passed: int, failed: int, total: int, context_awa
 
 **所有 Agent 共享7个 Skills**：
 - ✅ `search_knowledge`: 心理知识库搜索（**Milvus 语义检索**）
-- ✅ `recommend_lifestyle`: 生活方式和用药建议（**Milvus 检索**）
+- ✅ `recommend_lifestyle`: 心理调适与自助建议（**Milvus 检索**）
 - ✅ `assess_risk`: 风险等级评估（规则引擎）
-- ✅ `analyze_symptoms`: 症状模式分析（规则引擎）
-- ✅ `disease_code`: ICD-10 疾病编码（**Milvus 检索**）
+- ✅ `analyze_symptoms`: 困扰模式分析（规则引擎）
+- ✅ `psych_scale_code`: ICD-11 心理筛查量表编码（**Milvus 检索**）
 - ✅ `clinical_guideline`: 临床指南检索（**Milvus 检索**）
 - ✅ `deep_research`: 深度研究（网络搜索 + 证据综合）
 
@@ -142,7 +142,7 @@ async def generate_test_report(passed: int, failed: int, total: int, context_awa
 
 - ✅ **统一知识管理**：所有心理知识统一存储在 Milvus 向量数据库
 - ✅ **数据来源**：txt 文档（`knowledge/data/documents/`）
-- ✅ **语义检索**：支持模糊查询（"血压高" → "高血压"）
+- ✅ **语义检索**：支持模糊查询（"焦虑" → "焦虑症"）
 - ✅ **类型过滤**：lifestyle、disease_classification、clinical_guideline
 - ✅ **易于扩展**：添加新知识无需修改代码，直接导入 txt 文件
 
@@ -232,11 +232,11 @@ txt 文档（knowledge/data/documents/）
 
 适用场景：
 - 💊 通用健康咨询
-- 🩺 症状分析和鉴别诊断
+- 🩺 困扰分析与风险评估
 - 📚 循证心理证据检索
 - 🔍 深度心理研究
 
-**免责声明**: 本系统仅供学习和研究使用，不能替代专业医生的诊断和治疗。
+**免责声明**: 本系统仅供学习和研究使用，不能替代专业心理/精神科服务。
 
 ---
 
@@ -290,7 +290,7 @@ async def test_agent_loop_with_tools():
     print("="*70)
 
     agent = ConsultationAgent()
-    question = "我最近经常胸痛和呼吸困难，严重吗？"
+    question = "我最近经常情绪低落和失眠，严重吗？"
     print(f"\n💬 问题: {question}\n")
 
     start = datetime.now()
@@ -333,11 +333,11 @@ async def test_shared_context():
 
     # 写入数据（SharedContext 使用 .data 字典，没有 set/get 方法）
     ctx.data["patient_age"] = 35
-    ctx.data["symptoms"] = ["头痛", "发热"]
+    ctx.data["symptoms"] = ["失眠", "情绪低落"]
 
     # 读取数据
     assert ctx.data["patient_age"] == 35
-    assert ctx.data["symptoms"] == ["头痛", "发热"]
+    assert ctx.data["symptoms"] == ["失眠", "情绪低落"]
 
     # 发布事件
     from swarm.events import Event
@@ -433,9 +433,9 @@ async def test_complex_case_swarm():
     print("="*70)
 
     question = """
-我是一位35岁女性，最近两周持续头痛，伴随发热（38.5°C）、
-颈部僵硬、恶心呕吐，吃了退烧药也不见好转。我有高血压病史，
-目前在服用降压药。这是什么情况？严重吗？
+我是一位16岁青少年，最近两周持续情绪低落，伴随失眠、食欲下降，
+有时觉得活着没意思，出现过自伤念头。我有抑郁家族史，
+目前在校压力很大。这是什么情况？严重吗？
     """.strip()
 
     print(f"\n💬 问题: {question}\n")
@@ -735,16 +735,16 @@ async def test_recommend_lifestyle():
     agent = ConsultationAgent()
 
     result = await agent.process({
-        "question": "我有高血压，应该如何调整生活方式和用药？",
-        "context": {"age": 55, "diagnosis": "高血压"}
+        "question": "我最近焦虑睡不好，应该如何自我调节？",
+        "context": {"age": 17, "concern": "焦虑"}
     })
 
     assert "answer" in result, "结果缺少answer字段"
 
     # 检查是否包含生活方式相关内容
     answer = result["answer"]
-    assert any(keyword in answer for keyword in ["饮食", "运动", "生活", "用药", "药物"]), \
-        "答案应包含生活方式或用药建议"
+    assert any(keyword in answer for keyword in ["作息", "运动", "放松", "睡眠", "社会支持"]), \
+        "答案应包含心理调适或自助建议"
 
     print(f"\n✅ 测试通过！答案长度：{len(answer)} 字符")
     print(f"\n{'='*70}")
@@ -755,16 +755,16 @@ async def test_recommend_lifestyle():
     print("✅ 测试 5.1 通过！")
 
 
-async def test_disease_classification():
-    """测试 5.2: 疾病分类工具 (disease_classification)"""
+async def test_scale_classification():
+    """测试 5.2: 心理量表编码工具 (psych_scale_code)"""
     print("\n" + "="*70)
-    print("测试 5.2: 疾病分类工具 (disease_classification)")
+    print("测试 5.2: 心理量表编码工具 (psych_scale_code)")
     print("="*70)
 
     agent = DiagnosticAgent()
 
     result = await agent.process({
-        "question": "2型糖尿病的ICD-10编码是什么？属于哪一类疾病？",
+        "question": "PHQ-9 的编码与分类是什么？适合什么人群？",
         "context": {}
     })
 
@@ -793,7 +793,7 @@ async def test_clinical_guidelines():
     agent = ResearchAgent()
 
     result = await agent.process({
-        "question": "高血压的最新诊疗指南建议是什么？诊断标准是什么？",
+        "question": "青少年抑郁干预指南建议是什么？",
         "context": {}
     })
 
@@ -801,7 +801,7 @@ async def test_clinical_guidelines():
 
     # 检查是否包含指南相关内容
     answer = result["answer"]
-    assert any(keyword in answer for keyword in ["指南", "标准", "诊断", "140", "90"]), \
+    assert any(keyword in answer for keyword in ["指南", "标准", "干预", "抑郁"]), \
         "答案应包含临床指南信息"
 
     print(f"\n✅ 测试通过！答案长度：{len(answer)} 字符")
@@ -831,14 +831,14 @@ async def test_deep_research_evidence_synthesizer():
     # 创建模拟搜索结果
     web_results = [
         SearchResult(
-            title="2型糖尿病治疗新进展",
-            url="https://example.com/diabetes",
-            snippet="最新研究显示GLP-1受体激动剂和SGLT2抑制剂在血糖控制和心血管保护方面有显著优势。"
+            title="青少年抑郁治疗新进展",
+            url="https://example.com/depression",
+            snippet="最新研究显示CBT和IPT在抑郁缓解与功能恢复方面有显著优势。"
         ),
         SearchResult(
-            title="二甲双胍联合治疗方案",
-            url="https://example.com/metformin",
-            snippet="二甲双胍作为一线用药，可与多种降糖药物联合使用。"
+            title="CBT联合治疗方案",
+            url="https://example.com/cbt",
+            snippet="CBT作为一线心理干预，可与药物或IPT联合使用。"
         ),
     ]
 
@@ -846,8 +846,8 @@ async def test_deep_research_evidence_synthesizer():
     kb_results = [
         {
             "id": "doc1",
-            "content": "糖尿病诊疗指南（2024版）：2型糖尿病的治疗目标是控制血糖、预防并发症。",
-            "metadata": {"title": "糖尿病诊疗指南（2024版）"},
+            "content": "抑郁干预指南（2024版）：青少年抑郁的治疗目标是缓解症状、恢复功能、预防复发。",
+            "metadata": {"title": "抑郁干预指南（2024版）"},
             "score": 0.92
         },
     ]
@@ -855,7 +855,7 @@ async def test_deep_research_evidence_synthesizer():
     synthesizer = EvidenceSynthesizer()
 
     report = await synthesizer.synthesize(
-        query="2型糖尿病的最新治疗方法",
+        query="青少年抑郁的最新干预方法",
         web_results=web_results,
         kb_results=kb_results
     )
@@ -907,7 +907,7 @@ async def test_deep_research_end_to_end():
 
     # 提问需要最新信息的问题（促使 Agent 使用 deep_research）
     question = """
-    糖尿病的最新治疗方法有哪些？特别是GLP-1受体激动剂和SGLT2抑制剂的最新研究进展。
+    青少年抑郁的最新干预方法有哪些？特别是CBT和IPT的最新研究进展。
     """.strip()
 
     print(f"\n💬 问题: {question}\n")
@@ -937,8 +937,8 @@ async def test_deep_research_end_to_end():
 
         # 检查是否包含深度研究相关内容
         research_indicators = [
-            'GLP-1', 'SGLT2', '受体激动剂', '抑制剂',
-            '研究', '治疗', '糖尿病', '证据', '指南'
+            'CBT', 'IPT', '认知行为', '人际',
+            '研究', '干预', '抑郁', '证据', '指南'
         ]
 
         matched_keywords = [kw for kw in research_indicators if kw in answer]
@@ -962,7 +962,7 @@ async def test_deep_research_end_to_end():
 # Phase 6: Skills 集成测试（已通过 Phase 4 和 Phase 5 验证）
 # ============================================================================
 # 注：Phase 6 的测试已被 Phase 4-5 覆盖，Skills 已完全替代 Tools
-# - Phase 4: 测试了 recommend_lifestyle, disease_code, clinical_guideline
+# - Phase 4: 测试了 recommend_lifestyle, psych_scale_code, clinical_guideline
 # - Phase 5: 测试了 deep_research
 # 无需重复测试
 
@@ -983,7 +983,7 @@ async def test_unified_memory_single_agent():
     # 第一轮：保存初始会话
     print("\n📝 第一轮对话（建立记忆）...")
     result1 = await coordinator.process(
-        question="什么是高血压？",
+        question="什么是抑郁症？",
         session_id=session_id
     )
 
@@ -1018,7 +1018,7 @@ async def test_unified_memory_single_agent():
 
     # 验证长期记忆（通过 Mem0 检索）
     ltm = LongTermMemory()
-    similar = ltm.search_similar_sessions("高血压", limit=5)
+    similar = ltm.search_similar_sessions("抑郁", limit=5)
     print(f"\n🔍 长期记忆检索:")
     print(f"  - 找到 {len(similar)} 条相似历史案例")
 
@@ -1041,7 +1041,7 @@ async def test_unified_memory_swarm():
     # 复杂问题触发 Swarm 模式
     print("\n📝 复杂问题（触发 Swarm）...")
     result = await coordinator.process(
-        question="52岁男性，高血压10年，最近胸痛和呼吸困难，如何管理？",
+        question="16岁青少年，情绪低落两周伴自伤念头，如何帮助？",
         session_id=session_id
     )
 
@@ -1067,7 +1067,7 @@ async def test_unified_memory_swarm():
 
     # 验证长期记忆
     ltm = LongTermMemory()
-    similar = ltm.search_similar_sessions("高血压 胸痛", limit=5)
+    similar = ltm.search_similar_sessions("抑郁 自伤", limit=5)
     print(f"\n🔍 长期记忆检索:")
     print(f"  - 找到 {len(similar)} 条相似案例")
 
@@ -1098,14 +1098,14 @@ async def test_harness_constraint_validator():
     assert result.get("valid"), "合法工具调用应该通过验证"
 
     # 测试输出验证
-    output_no_disclaimer = "高血压需要低盐饮食。"
+    output_no_disclaimer = "我最近很焦虑，不想去上学。"
     result = validator.validate_output("consultation_agent", output_no_disclaimer)
     assert not result.get("valid"), "缺少免责声明应该验证失败"
     assert "缺少免责声明" in result.get("violations", []), "应该检测到缺少免责声明"
 
     # 测试任务分解验证
     result = validator.validate_task_decomposition(
-        "感冒了怎么办？",
+        "我最近很焦虑怎么办？",
         [{"type": "knowledge_search"}]
     )
     assert result.get("valid"), "简单问题的简单分解应该通过"
@@ -1126,12 +1126,12 @@ async def test_harness_auto_fixer():
     fixer = AutoFixer()
 
     # 测试添加免责声明
-    output = "高血压需要低盐饮食、适量运动。"
+    output = "我最近很焦虑，可以自己调节吗？"
     fixed = fixer.fix_missing_disclaimer(output)
     assert "免责声明" in fixed or "仅供参考" in fixed, "应该添加免责声明"
 
     # 测试添加高危警告
-    output_high_risk = "您的胸痛可能是心绞痛。"
+    output_high_risk = "您可能有严重的抑郁情绪，甚至有自伤念头。"
     fixed = fixer.fix_high_risk_warning(output_high_risk)
     assert "就医" in fixed or "120" in fixed, "高危症状应该添加就医警告"
 
@@ -1148,10 +1148,10 @@ async def test_harness_entropy_manager():
 
     # 测试 1: 消息去重 (deduplicate_messages)
     messages = [
-        {"role": "user", "content": "高血压怎么办？"},
-        {"role": "assistant", "content": "建议低盐饮食。"},
-        {"role": "user", "content": "高血压怎么办？"},  # 重复
-        {"role": "assistant", "content": "建议低盐饮食。"},  # 重复
+        {"role": "user", "content": "我最近焦虑怎么办？"},
+        {"role": "assistant", "content": "建议先尝试放松训练。"},
+        {"role": "user", "content": "我最近焦虑怎么办？"},  # 重复
+        {"role": "assistant", "content": "建议先尝试放松训练。"},  # 重复
     ]
 
     deduplicated = manager.deduplicate_messages(messages)
@@ -1177,12 +1177,12 @@ async def test_harness_entropy_manager():
     sessions = [
         {
             "memory_id": "1",
-            "content": "问题：高血压怎么办？\n回答：建议低盐饮食...",
+            "content": "问题：我最近焦虑怎么办？\n回答：建议先尝试放松训练...",
             "timestamp": datetime(2026, 1, 1)
         },
         {
             "memory_id": "2",
-            "content": "问题：高血压怎么办？\n回答：建议低盐饮食...",  # 重复
+            "content": "问题：我最近焦虑怎么办？\n回答：建议先尝试放松训练...",  # 重复
             "timestamp": datetime(2026, 1, 2)
         },
         {
@@ -1369,7 +1369,7 @@ async def main():
         ("Phase 3: 长期记忆（Mem0）", test_long_term_memory),
         ("Phase 3: 记忆系统集成", test_memory_integration),
         ("Phase 4: 生活方式建议工具", test_recommend_lifestyle),
-        ("Phase 4: 疾病分类工具", test_disease_classification),
+        ("Phase 4: 心理量表编码工具", test_scale_classification),
         ("Phase 4: 临床指南检索工具", test_clinical_guidelines),
         ("Phase 5: DeepResearch 证据综合器", test_deep_research_evidence_synthesizer),
         ("Phase 5: DeepResearch 工具集成", test_deep_research_tool_integration),
@@ -1428,7 +1428,7 @@ async def main():
         else:
             print("  ⚠️  Phase 3: 记忆系统集成通过，但上下文利用需要进一步优化")
         print("  ✅ Phase 4: 生活方式建议工具（ConsultationAgent）")
-        print("  ✅ Phase 4: 疾病分类工具（DiagnosticAgent）")
+        print("  ✅ Phase 4: 心理量表编码工具（DiagnosticAgent）")
         print("  ✅ Phase 4: 临床指南检索工具（ResearchAgent）")
         print("  ✅ Phase 5: DeepResearch 证据综合器（网络搜索+知识库+证据综合）")
         print("  ✅ Phase 5: DeepResearch 工具集成到 ResearchAgent")

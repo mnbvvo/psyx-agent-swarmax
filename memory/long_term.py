@@ -121,7 +121,7 @@ class LongTermMemory:
 
         try:
             # 构建记忆文本（包含问题和答案摘要）
-            memory_text = f"问题：{question}\\n回答：{answer[:500]}..."
+            memory_text = f"问题：{question}\n回答：{answer[:500]}..."
 
             # 添加到 Mem0
             result = self.mem0.add(
@@ -137,7 +137,8 @@ class LongTermMemory:
 
             # 提取记忆ID
             if isinstance(result, dict):
-                memory_id = result.get("id", result.get("results", [{}])[0].get("id"))
+                _results = result.get("results") or []
+                memory_id = result.get("id") or (_results[0].get("id") if _results else None)
             else:
                 memory_id = str(result)
 

@@ -47,7 +47,7 @@ class ConsultationAgent(BaseAgent, SkillRegistryMixin):
 2. recommend_lifestyle: 提供生活作息与心理调适建议（睡眠、运动、放松、社交支持）
 3. assess_risk: 评估当前困扰的风险等级（低/中/高/危机）
 4. analyze_symptoms: 分析情绪/行为/认知困扰的模式与可能关联
-5. disease_code: 查询心理诊断/筛查量表编码（ICD-11 精神行为障碍、PHQ-9、GAD-7 等）
+5. psych_scale_code: 查询心理筛查量表编码（ICD-11 精神行为障碍、PHQ-9、GAD-7 等）
 6. clinical_guideline: 检索心理干预指南与循证实践（CBT、DBT、正念等）
 7. deep_research: 深度研究（网络搜索+知识库+证据综合）
 8. search_history: 搜索当前会话的历史对话（短期记忆）

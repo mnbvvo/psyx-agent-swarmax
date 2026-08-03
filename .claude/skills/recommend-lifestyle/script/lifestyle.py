@@ -16,28 +16,28 @@ def get_knowledge_base():
     return _kb_instance
 
 
-async def recommend_lifestyle(diagnosis: str) -> Dict[str, Any]:
+async def recommend_lifestyle(concern: str) -> Dict[str, Any]:
     """
-    提供生活方式建议
+    提供心理调适与生活方式建议
 
     Args:
-        diagnosis: 疾病名称或症状
+        concern: 困扰或情绪议题描述
 
     Returns:
         {
-            "answer": "格式化的生活方式建议",
-            "diagnosis": "疾病名称",
-            "categories": ["diet", "exercise", "lifestyle", "medication"]
+            "answer": "格式化的心理调适建议",
+            "concern": "困扰议题",
+            "categories": ["relaxation", "exercise", "sleep", "social_support"]
         }
     """
-    logger.info(f"Recommending lifestyle for: {diagnosis}")
+    logger.info(f"Recommending lifestyle for: {concern}")
 
     # 使用知识库单例
     kb = get_knowledge_base()
 
     # 从 Milvus 检索心理调适建议
     results = kb.search(
-        query=f"{diagnosis} 心理调适 放松训练 作息 运动 社会支持",
+        query=f"{concern} 心理调适 放松训练 作息 运动 社会支持",
         top_k=1,
         filter_type="lifestyle"
     )
@@ -47,26 +47,26 @@ async def recommend_lifestyle(diagnosis: str) -> Dict[str, Any]:
         content = doc["content"]
 
         return {
-            "answer": format_advice(diagnosis, content),
-            "diagnosis": diagnosis,
+            "answer": format_advice(concern, content),
+            "concern": concern,
             "categories": ["relaxation", "exercise", "sleep", "social_support"],
             "source": "向量数据库"
         }
     else:
         # 未找到相关内容
-        logger.warning(f"No coping advice found in vector DB for {diagnosis}")
+        logger.warning(f"No coping advice found in vector DB for {concern}")
         return {
-            "answer": f"未找到关于'{diagnosis}'的调适建议，可尝试更具体的困扰描述或联系学校心理老师。",
-            "diagnosis": diagnosis,
+            "answer": f"未找到关于'{concern}'的调适建议，可尝试更具体的困扰描述或联系学校心理老师。",
+            "concern": concern,
             "categories": [],
             "source": "未找到"
         }
 
 
-def format_advice(diagnosis: str, content: str) -> str:
+def format_advice(concern: str, content: str) -> str:
     """格式化心理调适建议"""
     output = [
-        f"【{diagnosis} 心理调适建议】\n",
+        f"【{concern} 心理调适建议】\n",
         content,
         "\n【免责声明】",
         "以上建议仅供参考，不能替代专业心理咨询师的指导。"
@@ -75,6 +75,6 @@ def format_advice(diagnosis: str, content: str) -> str:
     return "\n".join(output)
 
 
-def recommend_lifestyle_sync(diagnosis: str) -> Dict[str, Any]:
+def recommend_lifestyle_sync(concern: str) -> Dict[str, Any]:
     import asyncio
-    return asyncio.run(recommend_lifestyle(diagnosis))
+    return asyncio.run(recommend_lifestyle(concern))

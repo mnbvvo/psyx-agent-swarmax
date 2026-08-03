@@ -10,13 +10,13 @@ description: Search similar historical cases from long-term memory (Mem0). Use w
 ## When to Use
 
 - 用户问"有类似的案例吗""之前有人问过这个问题吗"
-- 需要参考历史病例或类似问题的处理经验
+- 需要参考历史案例或类似问题的处理经验
 - 跨会话的知识检索
 
 ## 调用方式
 
 ```bash
-/search-similar-cases 高血压患者的饮食建议
+/search-similar-cases 焦虑青少年的调适建议
 ```
 
 ## 返回格式
@@ -25,7 +25,7 @@ description: Search similar historical cases from long-term memory (Mem0). Use w
 {
   "answer": "格式化的相似案例",
   "total_found": 3,
-  "query": "高血压患者的饮食建议"
+  "query": "焦虑青少年的调适建议"
 }
 ```
 

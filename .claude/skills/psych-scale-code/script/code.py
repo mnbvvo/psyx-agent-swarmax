@@ -1,6 +1,6 @@
 """
-Disease Code Skill
-疾病编码查询 Skill（自包含，无需依赖tools）
+Psych Scale Code Skill
+心理量表编码查询 Skill（自包含，无需依赖tools）
 """
 from typing import Dict, Any
 from loguru import logger
@@ -16,28 +16,28 @@ def get_knowledge_base():
     return _kb_instance
 
 
-async def disease_code(disease_name: str) -> Dict[str, Any]:
+async def psych_scale_code(scale_name: str) -> Dict[str, Any]:
     """
-    查询疾病 ICD-10 编码
+    查询心理筛查量表编码（ICD-11），如 PHQ-9、GAD-7
 
     Args:
-        disease_name: 疾病名称
+        scale_name: 量表或议题名称
 
     Returns:
         {
-            "answer": "格式化的疾病编码信息",
-            "icd10_code": "ICD-10 编码",
-            "category": "疾病分类"
+            "answer": "格式化的量表编码信息",
+            "icd11_code": "ICD-11 编码",
+            "category": "量表分类"
         }
     """
-    logger.info(f"Searching ICD-10 code for disease: {disease_name}")
+    logger.info(f"Searching ICD-11 code for: {scale_name}")
 
     # 使用知识库单例
     kb = get_knowledge_base()
 
-    # 使用 Milvus 检索心理量表 / 诊断编码
+    # 使用 Milvus 检索心理筛查量表编码
     results = kb.search(
-        query=f"{disease_name} 量表 编码 筛查 诊断标准",
+        query=f"{scale_name} 量表 编码 筛查 标准",
         top_k=1,
         filter_type="disease_classification"
     )
@@ -48,33 +48,33 @@ async def disease_code(disease_name: str) -> Dict[str, Any]:
 
         # 从内容中提取编码（简单解析）
         content = doc["content"]
-        icd10_code = metadata.get("icd10_code", "")
-        if not icd10_code and ("编码：" in content or "ICD-10编码：" in content):
+        icd11_code = metadata.get("icd11_code", "")
+        if not icd11_code and ("编码：" in content or "ICD-11编码：" in content):
             # 从内容中提取
             lines = content.split("\n")
             for line in lines:
                 if "编码：" in line:
-                    icd10_code = line.split("：", 1)[1].strip()
+                    icd11_code = line.split("：", 1)[1].strip()
                     break
 
         return {
-            "answer": format_code_info(disease_name, content),
-            "icd10_code": icd10_code,
+            "answer": format_code_info(scale_name, content),
+            "icd11_code": icd11_code,
             "category": metadata.get("category", ""),
             "source": "向量数据库"
         }
     else:
         # 未找到相关内容
-        logger.warning(f"No scale/code found in vector DB for {disease_name}")
+        logger.warning(f"No scale/code found in vector DB for {scale_name}")
         return {
-            "answer": f"未找到'{disease_name}'的量表或编码信息，建议使用更标准的名称或联系专业人员。",
-            "icd10_code": "",
+            "answer": f"未找到'{scale_name}'的量表或编码信息，建议使用更标准的名称或联系专业人员。",
+            "icd11_code": "",
             "category": "",
             "source": "未找到"
         }
 
 
-def format_code_info(disease_name: str, content: str) -> str:
+def format_code_info(scale_name: str, content: str) -> str:
     """格式化心理量表/编码信息"""
     output = [
         f"【心理量表 / 编码信息】\n",
@@ -84,6 +84,6 @@ def format_code_info(disease_name: str, content: str) -> str:
     return "\n".join(output)
 
 
-def disease_code_sync(disease_name: str) -> Dict[str, Any]:
+def psych_scale_code_sync(scale_name: str) -> Dict[str, Any]:
     import asyncio
-    return asyncio.run(disease_code(disease_name))
+    return asyncio.run(psych_scale_code(scale_name))

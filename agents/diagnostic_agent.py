@@ -74,7 +74,7 @@ class DiagnosticAgent(BaseAgent, SkillRegistryMixin):
 2. recommend_lifestyle: 生活作息与调适建议
 3. assess_risk: 评估风险等级（低/中/高/危机）
 4. analyze_symptoms: 分析困扰模式（情绪/行为/认知/生理）
-5. disease_code: 查询心理诊断/筛查量表编码（ICD-11、PHQ-9、GAD-7 等）
+5. psych_scale_code: 查询心理筛查量表编码（ICD-11、PHQ-9、GAD-7 等）
 6. clinical_guideline: 检索心理干预指南与循证实践
 7. deep_research: 深度研究
 8. search_history: 搜索当前会话历史（短期记忆）
@@ -83,7 +83,7 @@ class DiagnosticAgent(BaseAgent, SkillRegistryMixin):
 **Skills 使用策略**：
 - 首先使用 assess_risk 评估风险
 - 然后使用 analyze_symptoms 分析模式
-- 如需量表/编码，使用 disease_code
+- 如需量表/编码，使用 psych_scale_code
 - 如需权威指南，使用 clinical_guideline
 - 基于 Skill 结果进行风险研判
 - 最多2-3次 Skill 调用，然后给出研判
@@ -139,7 +139,7 @@ class DiagnosticAgent(BaseAgent, SkillRegistryMixin):
 
         result.update({
             "risk_level": risk_level,
-            "diagnosis_provided": True
+            "assessment_provided": True
         })
 
         return result

@@ -91,7 +91,7 @@ class LLMClient:
             )
 
             content = response.choices[0].message.content
-            logger.debug(f"LLM response length: {len(content)} chars")
+            logger.debug(f"LLM response length: {len(content or '')} chars")
             return content
 
         except Exception as e:
@@ -192,7 +192,7 @@ class LLMClient:
                     tool_calls.append(ToolCall(
                         id=tc.id,
                         name=tc.function.name,
-                        arguments=json.loads(tc.function.arguments)
+                        arguments=json.loads(tc.function.arguments or "{}")
                     ))
                 logger.debug(f"LLM requested {len(tool_calls)} tool calls")
 

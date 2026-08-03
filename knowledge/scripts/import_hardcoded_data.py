@@ -4,7 +4,7 @@
 数据来源：knowledge/data/documents/*.txt
 文档分类：
 - 01-09: 生活作息与心理调适建议（coping）
-- 10-19: 心理筛查量表 / 诊断编码（psych_scale）
+- 10-19: 心理筛查量表 / 筛查编码（psych_scale）
 - 20-29: 心理干预指南与循证实践（intervention_guideline）
 """
 import sys
@@ -43,7 +43,7 @@ def load_documents_from_directory(doc_dir: Path) -> list:
 
             file_num = parts[0]
             doc_type_prefix = parts[1] if len(parts) > 1 else ""
-            disease_name = parts[2] if len(parts) > 2 else ""
+            topic_name = parts[2] if len(parts) > 2 else ""
 
             # 确定文档类型和元数据
             if file_num.startswith('0') and int(file_num) < 10:
@@ -51,9 +51,9 @@ def load_documents_from_directory(doc_dir: Path) -> list:
                 doc_type = "lifestyle"
                 source = "心理调适建议数据库"
             elif 10 <= int(file_num) < 20:
-                # 10-19: 心理筛查量表 / 诊断编码（检索类型 disease_classification）
+                # 10-19: 心理筛查量表 / 筛查编码（检索类型 disease_classification）
                 doc_type = "disease_classification"
-                source = "心理量表/诊断编码数据库"
+                source = "心理量表/筛查编码数据库"
             elif 20 <= int(file_num) < 30:
                 # 20-29: 心理干预指南（检索类型 clinical_guideline）
                 doc_type = "clinical_guideline"
@@ -62,11 +62,11 @@ def load_documents_from_directory(doc_dir: Path) -> list:
                 doc_type = "general"
                 source = "心理知识库"
 
-            # 从内容中提取疾病名称（如果有）
-            if not disease_name:
+            # 从内容中提取议题名称（如果有）
+            if not topic_name:
                 # 尝试从内容第一行提取
                 first_line = content.split('\n')[0].strip()
-                disease_name = first_line
+                topic_name = first_line
 
             # 构建文档
             doc = {
@@ -74,14 +74,14 @@ def load_documents_from_directory(doc_dir: Path) -> list:
                 "content": content,
                 "metadata": {
                     "type": doc_type,
-                    "disease": disease_name,
+                    "topic": topic_name,
                     "source": source,
                     "filename": txt_file.name
                 }
             }
 
             documents.append(doc)
-            logger.debug(f"Loaded: {txt_file.name} -> type={doc_type}, disease={disease_name}")
+            logger.debug(f"Loaded: {txt_file.name} -> type={doc_type}, topic={topic_name}")
 
         except Exception as e:
             logger.error(f"Error loading {txt_file.name}: {e}")
@@ -119,13 +119,13 @@ def main():
 
     # 统计
     lifestyle_docs = extract_documents_by_type(all_docs, "lifestyle")
-    icd10_docs = extract_documents_by_type(all_docs, "disease_classification")
+    icd11_docs = extract_documents_by_type(all_docs, "disease_classification")
     guideline_docs = extract_documents_by_type(all_docs, "clinical_guideline")
     general_docs = extract_documents_by_type(all_docs, "general")
 
     logger.info(f"\n✅ 总共加载 {len(all_docs)} 个文档")
     logger.info(f"   - 生活方式建议: {len(lifestyle_docs)}")
-    logger.info(f"   - ICD-10编码: {len(icd10_docs)}")
+    logger.info(f"   - ICD-11 编码: {len(icd11_docs)}")
     logger.info(f"   - 临床指南: {len(guideline_docs)}")
     logger.info(f"   - 其他: {len(general_docs)}")
 
@@ -155,7 +155,7 @@ def main():
         results = kb.search(query, top_k=1, filter_type=filter_type)
         if results:
             logger.info(f"  ✅ '{query}' → 找到 {len(results)} 个结果")
-            logger.info(f"     最相关: {results[0]['metadata'].get('disease', 'N/A')} (相似度: {results[0]['score']:.3f})")
+            logger.info(f"     最相关: {results[0]['metadata'].get('topic', 'N/A')} (相似度: {results[0]['score']:.3f})")
         else:
             logger.warning(f"  ⚠️  '{query}' → 未找到结果")
 

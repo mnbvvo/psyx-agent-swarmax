@@ -42,7 +42,7 @@ class AgentIdentity:
     记录 Agent 的能力和协作经验
     """
     agent_id: str
-    agent_type: str  # consultation, diagnostic, research, etc.
+    agent_type: str  # consultation, risk_assessment, research, etc.
     core_capabilities: List[str]
     expertise_domains: List[str]
     collaboration_records: List[CollaborationRecord] = field(default_factory=list)

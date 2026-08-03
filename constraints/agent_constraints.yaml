@@ -46,7 +46,7 @@ agents:
     allowed_tools:
       - assess_risk
       - analyze_symptoms
-      - disease_code
+      - psych_scale_code
       - search_knowledge
       - clinical_guideline
       - search_history

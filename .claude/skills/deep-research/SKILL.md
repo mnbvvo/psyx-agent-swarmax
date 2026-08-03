@@ -22,5 +22,5 @@ description: Conduct deep research combining web search, knowledge base, and evi
 ## 调用方式
 
 ```bash
-/deep-research 糖尿病的最新治疗方法
+/deep-research 青少年抑郁的最新干预方法
 ```

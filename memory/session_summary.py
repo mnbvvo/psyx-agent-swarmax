@@ -33,7 +33,7 @@ class AgentParticipation:
 @dataclass
 class KeyFinding:
     """关键发现"""
-    category: str  # diagnosis/risk/evidence/treatment
+    category: str  # concern/risk/evidence/coping
     finding: str
     source_agent: str
     confidence: float = 1.0

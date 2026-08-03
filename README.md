@@ -38,7 +38,7 @@
 | `recommend_lifestyle` | 心理调适/自助建议 | Milvus |
 | `assess_risk` | 心理风险/危机评估 | 规则引擎 + RAG |
 | `analyze_symptoms` | 困扰模式分析（情绪/行为/认知/生理） | 规则引擎 + RAG |
-| `disease_code` | 心理量表/诊断编码参考（PHQ-9、GAD-7、ICD-11） | Milvus |
+| `psych_scale_code` | 心理量表/编码参考（PHQ-9、GAD-7、ICD-11） | Milvus |
 | `clinical_guideline` | 心理干预指南检索（CBT、危机干预等） | Milvus |
 | `deep_research` | 深度研究（网络搜索+证据综合） | 网络搜索 |
 | `search_history` | 搜索当前会话历史（短期记忆） | 内存 |
@@ -107,13 +107,9 @@ python examples/test_all.py    # 测试套件（含约束与危机检测）
 - Embedding: BAAI/bge-small-zh-v1.5（中文，512 维）
 - 文档: `knowledge/data/documents/*.txt`
   - `01-09`: 心理调适建议（coping）
-  - `10-19`: 心理筛查量表 / 诊断编码（psych_scale）
+  - `10-19`: 心理筛查量表 / 筛查编码（psych_scale）
   - `20-29`: 心理干预指南（clinical_guideline）
 
 ## ⚠️ 免责声明
 
 本系统仅供学习和研究使用，不能替代专业心理/精神科服务。所有建议仅供参考，如遇心理危机请立即拨打心理援助热线或紧急电话。
-
-## 📄 许可证
-
-MIT License

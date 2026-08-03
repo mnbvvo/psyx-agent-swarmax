@@ -49,7 +49,7 @@ async def clinical_guideline(query: str, max_results: int = 1) -> Dict[str, Any]
 
         return {
             "answer": format_guideline(doc["content"], metadata),
-            "guideline_title": f"{metadata.get('disease', query)}相关心理干预指南",
+            "guideline_title": f"{metadata.get('topic', query)}相关心理干预指南",
             "organization": metadata.get("organization", "N/A"),
             "year": metadata.get("year", "N/A"),
             "source": "向量数据库"
@@ -69,7 +69,7 @@ def format_guideline(content: str, metadata: Dict[str, Any]) -> str:
     """格式化心理干预指南信息"""
     output = [
         "【心理干预指南】\n",
-        f"指南名称：{metadata.get('disease', 'N/A')}相关心理干预指南",
+        f"指南名称：{metadata.get('topic', 'N/A')}相关心理干预指南",
         f"发布机构：{metadata.get('organization', 'N/A')}",
         f"发布年份：{metadata.get('year', 'N/A')}",
         f"\n内容：\n{content}"

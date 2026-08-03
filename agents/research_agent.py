@@ -21,7 +21,7 @@ class ResearchAgent(BaseAgent, SkillRegistryMixin):
 
     职责：
     - 检索心理文献和临床指南
-    - 提取关键证据支持诊疗决策
+    - 提取关键证据支持干预决策
     - 验证心理结论
     - 提供证据等级（A/B/C 级）
 
@@ -62,7 +62,7 @@ class ResearchAgent(BaseAgent, SkillRegistryMixin):
         """获取系统提示词"""
         return """你是专业的心理研究 Agent（ResearchAgent）。你的职责是：
 1. 检索相关心理文献和临床指南
-2. 提取关键证据支持诊疗决策
+2. 提取关键证据支持干预决策
 3. 验证其他 Agent 的心理结论
 4. 提供证据等级和文献来源
 
@@ -77,8 +77,8 @@ class ResearchAgent(BaseAgent, SkillRegistryMixin):
 2. recommend_lifestyle: 生活方式建议
 3. assess_risk: 评估症状风险等级
 4. analyze_symptoms: 分析症状模式
-5. disease_code: 查询ICD-10疾病编码
-6. clinical_guideline: 检索临床指南和诊疗规范（权威指南、诊断标准）
+5. psych_scale_code: 查询心理筛查量表编码（ICD-11）
+6. clinical_guideline: 检索临床指南和干预规范（权威指南、干预标准）
 7. deep_research: 深度心理研究（网络搜索 + 知识库 + 证据综合，适用于最新信息、复杂问题）
 8. search_history: 搜索当前会话历史（短期记忆）
 9. search_similar_cases: 搜索相似历史案例（长期记忆）
@@ -91,8 +91,8 @@ class ResearchAgent(BaseAgent, SkillRegistryMixin):
 - 综合多个信息来源，提供证据等级
 
 **Swarm 协作模式**：
-- 你可以从 SharedContext 读取其他 Agent 的诊断结果
-- 针对诊断结果检索支持性证据
+- 你可以从 SharedContext 读取其他 Agent 的评估结论
+- 针对评估结论检索支持性证据
 - 你的文献证据会帮助 LeadAgent 做出更可靠的最终建议
 - 专注于你的专长：文献检索和证据综合
 

@@ -49,7 +49,7 @@ async def search_knowledge(query: str, max_results: int = 5) -> Dict[str, Any]:
     formatted_results = []
     for doc in results:
         formatted_results.append({
-            "title": f"关于{doc['metadata'].get('disease', query)}的心理信息",
+            "title": f"关于{doc['metadata'].get('topic', query)}的心理信息",
             "content": doc["content"],
             "source": doc["metadata"].get("source", "心理知识库"),
             "score": doc["score"],
