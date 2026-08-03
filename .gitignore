@@ -51,3 +51,6 @@ htmlcov/
 # 会话记录
 session_summaries/*.md
 agent_identities/*.md
+
+## 模型
+models/
