@@ -13,7 +13,20 @@ from loguru import logger
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from swarm import process_with_swarm
+# 启动自检：统一导入核心内部模块，尽早暴露结构问题（如重命名残留/时间戳孤儿文件
+# 导致的 ModuleNotFoundError），并给出清晰可执行的提示，而非一段深堆栈报错。
+try:
+    from swarm import process_with_swarm
+    import validation  # noqa: F401  确认 validation 包可导入
+    from knowledge.milvus_kb import PsychologyKnowledgeBase  # noqa: F401  确认知识库模块可导入
+except ImportError as e:
+    logger.error(
+        "❌ 内部模块导入失败，项目结构可能不完整（例如重命名残留 / 文件缺失）。\n"
+        f"   错误: {e}\n"
+        "   排查: 确认 psyx-agent-swarm/swarm/events.py、validation/auto_fixer.py 等文件存在，\n"
+        "         且各包 __init__.py 的导入名与实际文件名一致。"
+    )
+    sys.exit(1)
 
 
 def setup_logger(verbose: bool = False):

@@ -193,6 +193,7 @@ class LeadAgent:
 3. **Agent 会自主选择工具**：你不需要指定使用哪个工具/技能
 4. **尽量少分配**：1 个 Agent 能搞定的，不要分配 2 个
 5. **任务要独立**：各个 Agent 的任务应该可以并行执行
+6. **每个 Agent 在子任务列表中最多出现一次**：若一个 Agent 需要承担多件事，把它们**合并成一条**子任务描述，而不是为同一 Agent 创建多条子任务（重复分配会导致该 Agent 被重复执行、意图分散）
 """
 
     async def assess_and_decompose(
@@ -255,20 +256,36 @@ class LeadAgent:
         """
         subtasks_data = decomposition_result.get("subtasks", [])
         subtasks = []
+        agent_to_subtask = {}  # assigned_agent -> 已创建的 SubTask（用于合并同 Agent 子任务）
 
         for data in subtasks_data:
             # 自动推断 type（基于 assigned_agent，向后兼容）
             # LeadAgent 不再输出 type 字段，这里根据 Agent 生成通用 type
             assigned_agent = data["assigned_agent"]
+            description = (data.get("description") or "").strip()
+
+            if assigned_agent in agent_to_subtask:
+                # 合并（而非丢弃）：同一 Agent 被分配多个子任务时，把后续描述追加到
+                # 已创建的子任务上。这样既不丢失任何诉求，又能避免该 Agent 的 Agent Loop
+                # 被重复执行（对应"每个 Agent 单次协作只跑一遍、覆盖其全部相关维度"）。
+                kept = agent_to_subtask[assigned_agent]
+                kept.description = f"{kept.description}；{description}"
+                logger.warning(
+                    f"⚠️ 合并重复子任务（同一 Agent）: {assigned_agent} "
+                    f"-> 追加描述: {description[:40]}"
+                )
+                continue
+
             inferred_type = data.get("type") or f"{assigned_agent}_task"
 
             subtask = SubTask(
                 id=str(uuid.uuid4()),
                 type=inferred_type,
-                description=data["description"],
+                description=description,
                 assigned_agent=assigned_agent
             )
 
+            agent_to_subtask[assigned_agent] = subtask
             shared_context.add_subtask(subtask)
             subtasks.append(subtask)
 

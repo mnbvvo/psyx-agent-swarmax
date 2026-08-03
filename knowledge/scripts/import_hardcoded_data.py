@@ -140,12 +140,15 @@ def main():
     logger.info(f"🎉 完成！成功导入 {num_added} 个文档到知识库")
     logger.info("=" * 70)
 
+    # 导入即把集合加载到内存（warm-up，确保本进程内可直接检索）
+    kb._ensure_loaded()
+
     # 测试检索
     logger.info("\n🔍 测试语义检索...")
     test_queries = [
-        ("血压高怎么办", "lifestyle"),
-        ("糖尿病编码", "disease_classification"),
-        ("高血压治疗指南", "clinical_guideline")
+        ("孩子沉迷游戏怎么办", "lifestyle"),
+        ("PHQ-9 量表编码", "disease_classification"),
+        ("青少年抑郁干预指南", "clinical_guideline")
     ]
 
     for query, filter_type in test_queries:

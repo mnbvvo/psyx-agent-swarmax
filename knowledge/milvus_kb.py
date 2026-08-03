@@ -31,7 +31,7 @@ class PsychologyKnowledgeBase:
         self,
         db_path: str = "./knowledge/data/milvus_lite.db",
         collection_name: str = "psychology_knowledge",
-        embedding_model: str = "BAAI/bge-small-zh-v1.5"
+        embedding_model: str = "./models/BAAI/bge-small-zh-v1.5"
     ):
         """
         初始化心理知识库
@@ -87,6 +87,9 @@ class PsychologyKnowledgeBase:
             )
         else:
             logger.info(f"Collection already exists: {collection_name}")
+            # 跨进程重开时集合处于 released/NotLoad 状态，构造时即加载，
+            # 避免后续首个 search 才触发 load（init 自我保护）。
+            self._ensure_loaded()
 
         self._initialized = True
 
@@ -168,6 +171,27 @@ class PsychologyKnowledgeBase:
 
         return len(data)
 
+    def _ensure_loaded(self):
+        """
+        确保 collection 已加载到内存。
+
+        Milvus 要求 search/get/query 前必须先把集合 load() 进内存；
+        跨进程重开（如导入脚本建好集合后再跑 main.py）时集合会处于
+        'released' 状态，此时直接 search 会报
+        "Collection is in state 'released'; call load() before search"。
+        """
+        try:
+            state = self.milvus_client.get_load_state(self.collection_name)
+        except Exception as e:
+            logger.warning(f"get_load_state failed ({e}), will attempt load")
+            state = None
+        if state != "Loaded":
+            try:
+                self.milvus_client.load_collection(self.collection_name)
+                logger.info(f"Loaded collection: {self.collection_name} (state was: {state})")
+            except Exception as e:
+                logger.error(f"load_collection failed: {e}")
+
     def search(
         self,
         query: str,
@@ -186,6 +210,9 @@ class PsychologyKnowledgeBase:
             文档列表，每个文档包含 id, content, metadata, score
         """
         logger.debug(f"Searching for: {query} (top_k={top_k}, filter_type={filter_type})")
+
+        # 确保集合已加载（跨进程重开时为 released 状态，必须先 load）
+        self._ensure_loaded()
 
         # 向量化查询
         query_vector = self.embedding_model.encode([query])[0]
@@ -234,6 +261,7 @@ class PsychologyKnowledgeBase:
 
     def count_documents(self) -> int:
         """统计文档数量"""
+        self._ensure_loaded()
         try:
             stats = self.milvus_client.describe_collection(self.collection_name)
             # Note: Milvus Lite may not return accurate count, this is a best-effort
